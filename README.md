@@ -1,9 +1,8 @@
 # svreg: the structural varying-coefficient regression
 The R package `svreg` implements the structural varying-coefficient regression (svReg) for the model selection of a varying-coefficient model with structured main predictors or modifying variables. It also provides functions for performing the pliable lasso (plasso) by Tibshirani and Friedman (2019).
 
-The reference for the svReg can be found at:
+Relevant references can be found at:
 * [svReg: Structural Varying-coefficient regression to differentiate how regional brain atrophy affects motor impairment for Huntington disease severity groups](https://arxiv.org/abs/2007.06076) by Kim et al. (2021).
-The reference for the pliable lasso can be found at:
 * [A Pliable Lasso](https://doi.org/10.1080/10618600.2019.1648271) by Tibshirani and Friedman (2019).
 
 ## Installation
