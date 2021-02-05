@@ -10,8 +10,6 @@ object_onedim <- function(bt, bt0, Xtilde, Ytilde, lambda){
 object_onedim1 <- function(bt, ot, Xtilde_b, Xtilde_o, Ytilde, lambda){
 
     N <- length(Ytilde)
-    #print(Xtilde_o)
-    #print(ot)
     diff <- Ytilde - Xtilde_b * bt - as.matrix(Xtilde_o) %*% ot
     obj <- (1/(2*N))*sum((diff)**2) + lambda*(sqrt(bt^2+sum(ot^2)))
     return(obj)
@@ -26,10 +24,6 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
     ## check sample_size >=1
     df_X <- round(df_X,0)
     df_Z <- round(df_Z,0)
-    #error_positive_value(df_Z,get_variable_name(df_Z))
-
-    #error_modifying_variable_df(sum(df_Z), ncol(Z))
-
     df_X_cum <- cumsum(df_X)
     df_Z_cum <- cumsum(df_Z)
     main_partition <- get_empty_list(paste0("l_",1:length(df_X)))
@@ -77,18 +71,15 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
         beta <- matrix(0, ncol = 1, nrow = p)
     } else {
         beta <- beta
-        #beta <- matrix(0, ncol = 1, nrow = p)
     }
     if (is.null(theta)){
         theta <- matrix(0, ncol = p, nrow = K)
     } else {
         theta <- theta
-        #theta <- matrix(0, ncol = p, nrow = K)
     }
 
     itr <- 0
     error <- 10000
-    #fmin <- numeric(iter)
     full_res <- Ytilde - (Xtilde %*% beta)
     for (jj in 1:p){
         full_res <- full_res - (as.matrix(W[[jj]]) %*% theta[,jj])
@@ -109,7 +100,6 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
     full_res2 <- Ytilde
     #xsqmean <- colMeans(Xtilde^2)
     while (error>tol && itr < iter){
-        #while ((sum(beta, theta)==0 || sum((beta-beta_old)^2)>tol || sum((theta-theta_old)^2)>tol) && itr < iter){
 
         itr <- itr + 1
         beta_old <- beta
@@ -126,56 +116,29 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
             for (m in 1:length(j)){
                 b_update = b_update + as.matrix(W[j][[m]]) %*% as.matrix(as.matrix(theta[,j])[,m])
             }
-            #b_tmp <- beta[j] + solve( crossprod(Xtilde[,j])/N ) %*% t(Xtilde[,j]) %*% (full_res2 + b_update)/N
-            #b_tmp <- beta[j] + t(Xtilde[,j]) %*% (full_res2 + b_update)/N
             t_update = full_res2*0
             for (m in 1:length(j)){
                 t_update = t_update + as.matrix(as.matrix(Xtilde[,j])[,m])*matrix(beta[j][m], N)
             }
-            #b_tmp_f <- beta[j] + t(Xtilde[,j]) %*% (full_res2)/N
-            #print(c("full res:", b_tmp))
             b_tmp <- t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
-            #print(c("partial res:", b_tmp_p))
-            #b_tmp <- beta[j] + t(Xtilde[,j]) %*% (full_res2 + b_update)/N
-            #b_tmp <- beta[j] + t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
             tg_tmp <- get_empty_list(paste0("g_",1:G))
-            #tg_tmp_f <- get_empty_list(paste0("g_",1:G))
             screen_cond_2 <- logical(G)
             for (kk in 1:G){
                 tg_tmp[[kk]] <- matrix(0, nrow = length(group_partition[[kk]]), ncol = length(j))
-                #tg_tmp_f[[kk]] <- matrix(0, nrow = length(group_partition[[kk]]), ncol = length(j))
                 screen_cond_2_val = tg_tmp[[kk]]*0
                 for (m in 1:length(j)){
-                    #tg_tmp_f[[kk]][,m] <- crossprod(W[j][[m]][,group_partition[[kk]]]) %*% as.matrix(as.matrix(theta[,j])[,m])[group_partition[[kk]]]/N + t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (full_res2)/N
-                    #print(c("full res tg:", tg_tmp[[kk]][,m]))
                     tg_update = b_update - (as.matrix(W[j][[m]][,group_partition[[kk]]]) %*% as.matrix(as.matrix(theta[,j])[,m])[group_partition[[kk]]])
                     tg_tmp[[kk]][,m] <- t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (full_res2 + b_update + t_update - tg_update)/N
-                    #print(c("partial res tg:", tg_tmp_p[[kk]][,m]))
-                    #tg_tmp[[kk]][,m] <- crossprod(W[j][[m]][,group_partition[[kk]]]) %*% as.matrix(as.matrix(theta[,j])[,m])[group_partition[[kk]]]/N + t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (full_res2 + t_update)/N
-                    #tg_tmp[[kk]][,m] <- crossprod(W[j][[m]][,group_partition[[kk]]]) %*% as.matrix(as.matrix(theta[,j])[,m])[group_partition[[kk]]]/N + t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (full_res2 + b_update + t_update)/N
-                    #tg_tmp[[kk]][,m] <- crossprod(W[j][[m]][,group_partition[[kk]]]) %*% as.matrix(as.matrix(theta[,j])[,m])[group_partition[[kk]]]/N + t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (full_res2 + as.matrix(as.matrix(Xtilde[,j])[,m])*matrix(beta[j][m], N) )/N
                     screen_cond_2_val[,m] <- soft_thresh(tg_tmp[[kk]][,m], alpha*lambda)^2
                 }
-                #tg_tmp[[kk]] <- crossprod(W[[j]][,group_partition[[kk]]]) %*% theta[,j][group_partition[[kk]]]/N + t(as.matrix(W[[j]][,group_partition[[kk]]])) %*% (full_res2 + Xtilde[,j]*matrix(beta[j], N) )/N
                 screen_cond_2[kk] <- (sqrt(sum(screen_cond_2_val)) <= (sqrt(df_X[l])+sqrt(df_X[l]*df_Z[kk])/sqrt(1+K))*(1-alpha)*lambda)
-                #screen_cond_2[kk] <- (sqrt(sum(screen_cond_2_val)) <= (sqrt(df_X[l])+sqrt(df_Z[kk])/sqrt(1+K))*(1-alpha)*lambda)
-                #screen_cond_2[kk] <- (sqrt(sum(screen_cond_2_val)) <= (1+sqrt(df_Z[kk])/sqrt(1+K))*(1-alpha)*lambda)
             }
-            #print(b_tmp)
             screen_cond_1 <- (sqrt(sum(b_tmp^2)) <= sqrt(df_X[l])*(1-alpha)*lambda)
-            #screen_cond_1 <- (sqrt(sum(b_tmp^2)) <= (1-alpha)*lambda)
-            #screen_cond_1 <- (abs(b_tmp) <= (1-alpha)*lambda)
-            #print(screen_cond_1)
-            #print(screen_cond_2)
             if (screen_cond_1 == TRUE & prod(screen_cond_2) == TRUE){
-                #print("start step1")
                 # If (beta,theta) = (0,0), skip to the next predictor
                 beta[j] <- beta[j]*0
                 theta[,j] <- theta[,j]*0
             } else {
-                #print("start step2")
-                #b_tmp <- beta[j] + solve( crossprod(Xtilde[,j])/N ) %*% t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
-                #b_tmp <- beta[j] + t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
                 # If (beta,theta) != (0,0), compute beta_hat and check theta=0
                 beta_check <- beta
                 if (TRUE){
@@ -192,62 +155,24 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
                                 betain[i,] = stats::optimize(object_onedim1, c(-100,100), ot=betain[-i,], Xtilde_b=x[,i], Xtilde_o=x[,-i], Ytilde=y, lambda=lambdas)$minimum
                             }
                             obj = object_onedim(bt=betain, bt0=0, Xtilde=x, Ytilde=y, lambda=lambdas)
-                            #print(abs(obj-obj_old))
                         }
                         beta_check[j] <- betain
                     } else {
-                        #b_tmp <- t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
                         beta_check[j] <- N/sum(Xtilde[,j]^2) * soft_thresh(b_tmp, sqrt(df_X[l])*(1-alpha)*lambda)
                     }
                 }
-                if (FALSE){
-                    if (df_X[l]>1){
-                        ### Use group lasso
-                        # Assuming theta = 0, partial residual is fullres + beta_l
-                        grp_data = list(x=as.matrix(Xtilde[,j]), y=full_res2 + b_update + t_update, n=N)
-                        #grp_data = list(x=as.matrix(Xtilde[,j]), y=full_res2 + b_update, n=N)
-                        #grp_data = list(x=as.matrix(Xtilde[,j]), y=full_res2 + t_update, n=N)
-                        grp_index = rep(1, df_X[l])
-                        grp_pen = (1-alpha)*lambda
-                        #sgl <- SGL(grp_data, grp_index, type = "linear", nlam = 1, alpha = 0, lambdas = grp_pen, standardize = FALSE)
-                        sgl <- oneDim(data = grp_data, index = grp_index, alpha = 0, lambdas = grp_pen)
-                        #print(sgl$beta)
-                        beta_check[j] <- sgl$beta
-                    } else {
-                        #b_tmp <- t(Xtilde[,j]) %*% (full_res2 + b_update + t_update)/N
-                        beta_check[j] <- N/sum(Xtilde[,j]^2) * soft_thresh(b_tmp, sqrt(df_X[l])*(1-alpha)*lambda)
-                    }
-                }
-                #print(c("b_tmp", b_tmp))
-                #b_tmp_scale <- solve( crossprod(Xtilde[,j])/N ) %*% b_tmp
-                #beta_check[j] <- max(1-sqrt(df_X[l])*(1-alpha)*lambda/sqrt(sum(b_tmp_scale^2)), 0)*b_tmp_scale
-                #beta_check[j] <- solve( crossprod(Xtilde[,j])/N ) %*% (max(1-sqrt(df_X[l])*(1-alpha)*lambda/sqrt(sum(b_tmp^2)), 0)*b_tmp)
-                #beta_check[j] <- N/sum(Xtilde[,j]^2) * max(1-sqrt(df_X[l])*(1-alpha)*lambda/sqrt(sum(b_tmp^2)), 0)*b_tmp
-                # approximate for non-orthogonal case
-                #beta_check[j] <- max(1-sqrt(df_X[l])*(1-alpha)*lambda/sqrt(sum(b_tmp^2)), 0)*(solve( crossprod(Xtilde[,j])/N ) %*% b_tmp)
-                # orthogonal case
-                #beta_check[j] <- max(1-sqrt(df_X[l])*(1-alpha)*lambda/sqrt(sum(b_tmp^2)), 0)*b_tmp
-                #print(beta_check[j])
-                #beta_check[j] <- N/sum(Xtilde[,j]^2) * soft_thresh(b_tmp, sqrt(df_X[l])*(1-alpha)*lambda)
-                #beta_check[j] <- N/sum(Xtilde[,j]^2) * soft_thresh(b_tmp, (1-alpha)*lambda)
 
                 screen_cond_3G <- logical(G)
                 screen_cond_3G_new <- !logical(G)
                 while (sum(ifelse(screen_cond_3G==screen_cond_3G_new,1,0)) < G){
-                    #print(screen_cond_3G)
-                    #print(screen_cond_3G_new)
                     screen_cond_3G <- screen_cond_3G_new
-                    #print(screen_cond_3G)
                     for (kk in 1:G){
                         screen_cond_3G_val = tg_tmp[[kk]]*0
                         for (m in 1:length(j)){
                             screen_cond_3G_val[,m] <- soft_thresh( tg_tmp[[kk]][,m] - ( t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (as.matrix(as.matrix(Xtilde[,j])[,m])*matrix(beta_check[j][m], N)) )/N, alpha*lambda)^2
                         }
                         screen_cond_3G[kk] <- (sqrt(sum(screen_cond_3G_val)) <= (1-alpha)*lambda*sqrt(df_X[l]*df_Z[kk])/sqrt(1+K))
-                        #screen_cond_3G[kk] <- (sqrt(sum(screen_cond_3G_val)) <= (1-alpha)*lambda*sqrt(df_Z[kk])/sqrt(1+K))
-                        #screen_cond_3G[kk] <- (sqrt(sum(soft_thresh( tg_tmp[[kk]] - ( t(as.matrix(W[[j]][,group_partition[[kk]]])) %*% (Xtilde[,j]*matrix(beta_check[j], N)) )/N, alpha*lambda)^2)) <= (1-alpha)*lambda*sqrt(df_Z[kk])/sqrt(1+K))
                     }
-                    #print(screen_cond_3G)
                     zG <- sum(screen_cond_3G)
                     nzG <- G - zG
                     nzdf_Z <- df_Z[!screen_cond_3G]
@@ -256,10 +181,8 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
                         beta[j] <- beta_check[j]
                         theta[,j] <- theta[,j]*0
                     } else{
-                        #print("start grad")
                         if (zG!=0){
                             z_group_partition <- group_partition[screen_cond_3G]
-                            #print(z_group_partition)
                             for (kk in 1:zG){
                                 theta[z_group_partition[[kk]],j] <- theta[z_group_partition[[kk]],j]*0
                             }
@@ -268,15 +191,12 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
                         nz_group_partition <- group_partition[!screen_cond_3G]
                         t <- tt#/xsqmean[j]
                         c <- t*(1-alpha)*lambda*sqrt(df_X[l])
-                        #c <- t*(1-alpha)*lambda
                         res <- Ytilde - (Xtilde %*% beta)
                         for (jj in 1:p){
                             res <- res - (as.matrix(W[[jj]]) %*% theta[,jj])
                         }
-                        #grad_beta <- -(1/N) * ( solve(crossprod(Xtilde[,j])/N) %*% t(Xtilde[,j]) %*% res )
                         grad_beta <- -(1/N) * ( t(Xtilde[,j]) %*% res )
                         g1 <- sqrt(sum((beta[j] - t*grad_beta)^2))
-                        #g1 <- abs(beta[j] - t*grad_beta)
                         grad_theta <- get_empty_list(paste0("grad_theta_",1:nzG))
                         g2 <- numeric(nzG)
                         for (i in 1:nzG){
@@ -284,40 +204,28 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
                             g2_val <- numeric(length(j))
                             for (m in 1:length(j)){
                                 grad_theta[[i]][,m] <- -(1/N) * ( t(as.matrix(W[j][[m]][,nz_group_partition[[i]]])) %*% res )
-                                #print(soft_thresh(as.matrix(as.matrix(theta[,j])[,m])[nz_group_partition[[i]]] - t*grad_theta[[i]][,m], t*alpha*lambda)^2)
                                 g2_val[m] <- sum(soft_thresh(as.matrix(as.matrix(theta[,j])[,m])[nz_group_partition[[i]]] - t*grad_theta[[i]][,m], t*alpha*lambda)^2)
                             }
-                            #print(c("g2_val", g2_val))
                             g2[i] <- sqrt(sum(g2_val))
-                            #grad_theta[[i]] <- -(1/N) * ( t(as.matrix(W[[j]][,nz_group_partition[[i]]])) %*% res )
-                            #g2[i] <- sqrt(sum(soft_thresh(theta[,j][nz_group_partition[[i]]] - t*grad_theta[[i]], t*alpha*lambda)^2))
                         }
-                        #r1 <- -c*sqrt(df_X[l])+sqrt((c^2)*df_X[l]-2*c*sum(g2*sqrt(nzdf_Z)/sqrt(1+K))+g1^2+sum(g2^2)-(df_X[l]-sum(nzdf_Z)/(1+K))*(c^2))
-                        #r2 <- -c*sqrt(df_X[l])-sqrt((c^2)*df_X[l]-2*c*sum(g2*sqrt(nzdf_Z)/sqrt(1+K))+g1^2+sum(g2^2)-(df_X[l]-sum(nzdf_Z)/(1+K))*(c^2))
                         r1 <- -c+sqrt((c^2)-2*c*sum(g2*sqrt(nzdf_Z)/sqrt(1+K))+g1^2+sum(g2^2)-(1-sum(nzdf_Z)/(1+K))*(c^2))
                         r2 <- -c-sqrt((c^2)-2*c*sum(g2*sqrt(nzdf_Z)/sqrt(1+K))+g1^2+sum(g2^2)-(1-sum(nzdf_Z)/(1+K))*(c^2))
                         # a: norm of beta, b: norm of theta
                         # Hence, we choose the largest value of a and b to take positive value
                         a <- max(g1*r1/(c+r1), g1*r2/(c+r2), g1*r1/(c+r2), g1*r2/(c+r1))
-                        #a <- max(g1*r1/(c*sqrt(df_X[l])+r1), g1*r2/(c*sqrt(df_X[l])+r2), g1*r1/(c*sqrt(df_X[l])+r2), g1*r2/(c*sqrt(df_X[l])+r1))
                         b <- numeric(nzG)
                         for (i in 1:nzG){
-                            #b[i] <- max((g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r2/(c*sqrt(df_X[l])+r2), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r1/(c*sqrt(df_X[l])+r1), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r1/(c*sqrt(df_X[l])+r2), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r2/(c*sqrt(df_X[l])+r1))
                             b[i] <- max((g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r2/(c+r2), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r1/(c+r1), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r1/(c+r2), (g2[i]-c*sqrt(nzdf_Z[i])/sqrt(1+K))*r2/(c+r1))
                         }
                         c1 <- 1+t*sqrt(df_X[l])*(1-alpha)*lambda/sqrt(a^2+sum(b^2))
-                        #c1 <- 1+t*(1-alpha)*lambda/sqrt(a^2+sum(b^2))
                         c2 <- numeric(nzG)
                         for (i in 1:nzG){
                             c2[i] <- 1+t*sqrt(df_X[l])*(1-alpha)*lambda*(sqrt(nzdf_Z[i])/sqrt(1+K)*1/b[i]+1/sqrt(a^2+sum(b^2)))
-                            #c2[i] <- 1+t*(1-alpha)*lambda*(sqrt(nzdf_Z[i])/sqrt(1+K)*1/b[i]+1/sqrt(a^2+sum(b^2)))
                         }
                         beta[j] <- (beta[j] - t*grad_beta)/c1
                         for (i in 1:nzG){
                             theta[nz_group_partition[[i]],j] <- soft_thresh(theta[nz_group_partition[[i]],j] - t*grad_theta[[i]], t*alpha*lambda)/c2[i]
-                            #theta[,j][nz_group_partition[[i]]] <- soft_thresh(theta[,j][nz_group_partition[[i]]] - t*grad_theta[[i]], t*alpha*lambda)/rep(c2[i], length(theta[,j][nz_group_partition[[i]]]))
                         }
-                        #print(c("updated beta", beta[j]))
                         beta_check[j] <- beta[j]
                         for (kk in 1:G){
                             screen_cond_3G_val = tg_tmp[[kk]]*0
@@ -325,24 +233,14 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
                                 screen_cond_3G_val[,m] <- soft_thresh( tg_tmp[[kk]][,m] - ( t(as.matrix(W[j][[m]][,group_partition[[kk]]])) %*% (as.matrix(as.matrix(Xtilde[,j])[,m])*matrix(beta_check[j][m], N)) )/N, alpha*lambda)^2
                             }
                             screen_cond_3G_new[kk] <- (sqrt(sum(screen_cond_3G_val)) <= (1-alpha)*lambda*sqrt(df_X[l]*df_Z[kk])/sqrt(1+K))
-                            #screen_cond_3G_new[kk] <- (sqrt(sum(soft_thresh( tg_tmp[[kk]] - ( t(as.matrix(W[[j]][,group_partition[[kk]]])) %*% Xtilde[,j]*beta_check[j] )/N, alpha*lambda)^2)) <= (1-alpha)*lambda*sqrt(df_Z[kk])/sqrt(1+K))
                         }
                     }
-                    #print(screen_cond_3G)
-                    #print(screen_cond_3G_new)
-                    #print(c("again?", (sum(ifelse(screen_cond_3G==screen_cond_3G_new,1,0)) < G), (sum(ifelse(screen_cond_3G==screen_cond_3G_new,1,0)))))
                 }
             }
-            #print(Xtilde[,j])
-            #print(matrix(c(beta_old[j] - beta[j]), nrow = N, ncol = length(beta[j]), byrow = TRUE))
             full_res <- full_res + Xtilde[,j] %*% as.matrix(beta_old[j] - beta[j]) #+ W[[j]] %*% (theta_old[,j] - theta[,j])
             for (m in 1:length(j)){
                 full_res <- full_res + W[j][[m]] %*% (as.matrix(theta_old[,j])[,m] - as.matrix(theta[,j])[,m])
             }
-            #full_res <- Ytilde0 - (Xtilde %*% beta) # - beta0 - Ztilde %*% theta0
-            #for (jj in 1:p){
-            #    full_res <- full_res - (as.matrix(W[[jj]]) %*% theta[,jj])
-            #}
 
             if (!is.null(Z)){
                 lmmodel <- stats::lm(full_res~Ztilde)
@@ -361,13 +259,7 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
 
         fmin=object_svReg(beta, theta, beta0, theta0, Xtilde, Ytilde0, Ztilde, W, main_partition, L, group_partition, G, alpha, lambda)
         error=abs(object_svReg(beta_old, theta_old, beta0_old, theta0_old, Xtilde, Ytilde0, Ztilde, W, main_partition, L, group_partition, G, alpha, lambda)-object_svReg(beta, theta, beta0, theta0, Xtilde, Ytilde0, Ztilde, W, main_partition, L, group_partition, G, alpha, lambda))
-        #print(error)
-        #print(beta[1:8])
-        #print(theta)
-        #if (sum(beta, theta)==0){itr <- iter}
     }
-    print(c("iteration number: ",itr, "error: ", error))
-    #print(beta[1:8])
     beta_raw <- beta*(1/SXYZ$Xweights)
     theta_raw <- theta*matrix((1/SXYZ$Xweights), K, p, byrow = TRUE)*matrix((1/SXYZ$Zweights), K, p, byrow = FALSE)
 
@@ -375,7 +267,6 @@ svReg1 <- function(X, Z = NULL, Y, df_X, df_Z, lambda = 0.5, alpha = 0.5, tt = 0
     for (i in 1:p){
         WW[[i]] <- X[,i] * Z
     }
-    #print(beta_raw)
     full_res_raw <- Y - (as.matrix(X) %*% beta_raw)
     for (jj in 1:p){
         full_res_raw <- full_res_raw - (as.matrix(WW[[jj]]) %*% theta_raw[,jj])
