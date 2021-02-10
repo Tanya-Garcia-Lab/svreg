@@ -298,6 +298,7 @@ cv.plasso <- function(X, Z, Y, kfold = 10, lambda_seq = NULL, alpha = 0.5, tt = 
 
     # Split the data into K folds
     if (!is.null(cvseed)) set.seed(cvseed)
+    RNGkind(sample.kind = "Rejection")
     idfold <- sample(1:N) %% kfold + 1
 
     # Calculate Pliable Lasso for each fold removed
